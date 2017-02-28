@@ -129,3 +129,68 @@ clearWallBit:
 RET
 
 ; ====== TODO Colin(down) ================================
+goDownStraight:
+	CALL paddleIndexSet			;R4 = 16
+	DEC R6, 1					;Decrement index of row
+	SUB R4, R6, R4 				;Check if space below
+	JZ R4, checkPaddleHit		;If on row 16 -> checkPaddleHit
+	CALL moveColIndexDown		;Move ball down and push to display
+	CALL goDownStraight			;Call itself
+RET
+
+goDownRight: 
+	CALL rightWallIndexSet		;R4(0001)
+	SUB R4, R5, R4				;Check if space right of ball
+	JZ R4, goDownLeft			;If no space right -> change direction else
+	CALL paddleIndexSet			;R4 = 16
+	DEC R6, 1					;Decrement index of row
+	SUB R4, R6, R4 				;Check if space below
+	JZ R4, checkPaddleHit		;If on row 16 -> checkPaddleHit
+	SHRL R5, 1					;Shift ball right one
+	CALL moveColIndexDown		;Move ball down and push to display
+	CALL goDownRight			;Call itself
+RET
+
+goDownLeft: 
+	CALL leftWallIndexSet		;R4(8000)
+	SUB R4, R5, R4				;Check if space right of ball
+	JZ R4, goDownRight			;If no space right -> change direction else
+	CALL paddleIndexSet			;R4 = 16
+	DEC R6						;Decrement index of row
+	SUB R4, R6, R4 				;check if space below
+	JZ R4, checkPaddleHit		;if on row 16 -> checkPaddleHit
+	SHLL R4, 1					;Shift ball left one
+	CALL moveColIndexDown		;Move ball down and push to display
+	CALL goDownLeft				;Call itself
+RET
+
+checkHitPaddle:
+
+RET
+
+upperWallIndexSet:
+	XOR R4, R4, R4	;R4(0000)
+	SETBR R4, 0		;R4(0001) =1  
+	SETBR R4, 2		;R4(0005) =5
+	SETBR R4, 3		;R4(000D) =13
+	SETBR R4, 4		;R4(001D) =29 UPPER WALL ROW
+RET
+
+paddleIndexSet: XOR R4, R4, R4		;R4(0000)
+	SETBR R4, 4						;R4(0010) =16 PADDLE ROW
+RET
+
+leftWallIndexSet: XOR R4, R4, R4	;R4(0000)
+	SETBR R4, 15					;R4(8000)
+RET
+
+rightWallIndexSet:XOR R4, R4, R4	;R4(0000)
+	SETBR R4, 1						;R4(0001)
+RET
+
+moveColIndexDown: XOR R4, R4, R4	;R0(0000)
+	MOVBAMEM @R6, R4   				;row Y   = R6(0000)
+	DEC R6        					;row Y-1 = eg R6(0010)
+	MOVBAMEM @R6, R5   				;Push R6 to row Y-1	
+RET
+	
